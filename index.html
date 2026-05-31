@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COVID-19 Analytics Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --border: #e2e8f0;
+            --error-bg: #fff5f5;
+            --error-text: #c53030;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-left: 20px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary);
+            background-color: #f0f0ff;
+        }
+
+        main {
+            max-width: 1400px;
+            width: 100%;
+            margin: 40px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            main { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        select:focus {
+            border-color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .error {
+            background-color: var(--error-bg);
+            color: var(--error-text);
+            border: 1px solid #feb2b2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .chart-display {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
+
+        .chart-display h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            align-self: flex-start;
+        }
+
+        .chart-display img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
+
+        .placeholder-text {
+            color: var(--text-muted);
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🦠 COVID-19 Intelligence Suite</h1>
+        <nav>
+            <a href="/" class="active">📈 Trend Analyzer</a>
+            <a href="/compare">📊 Cross-Country Comparison</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="card">
+            <h3 style="margin-top:0; margin-bottom: 20px;">Analysis Controls</h3>
+            
+            {% if error_message %}
+                <div class="error">⚠️ {{ error_message }}</div>
+            {% endif %}
+
+            <form method="POST">
+                <div class="form-group">
+                    <label for="country">Target Jurisdiction</label>
+                    <select name="country" id="country">
+                        {% for c in countries %}
+                            <option value="{{ c }}" {% if c == selected_country %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="metric">Analytical Metric</label>
+                    <select name="metric" id="metric">
+                        <option value="new_cases" {% if selected_metric == 'new_cases' %}selected{% endif %}>Daily New Cases</option>
+                        <option value="new_deaths" {% if selected_metric == 'new_deaths' %}selected{% endif %}>Daily New Deaths</option>
+                    </select>
+                </div>
+
+                <button type="submit">Compute & Plot Trend</button>
+            </form>
+        </section>
+
+        <section class="card chart-display">
+            {% if chart_data %}
+                <h2>{{ selected_country }} — Historical Rolling Trends</h2>
+                <img src="data:image/png;base64,{{ chart_data }}" alt="COVID-19 Trend Chart">
+            {% else %}
+                <p class="placeholder-text">Select your target dataset parameters from the configuration panel and click "Compute" to generate the visualization matrix.</p>
+            {% endif %}
+        </section>
+    </main>
+
+</body>
+</html>
