@@ -1,5 +1,9 @@
 # Interactive COVID-19 Data Trend Analyzer
 
+Project submitted by: Hafsah Naseer , Maryam Qasim
+                    2520100            2520086
+Submitted to: mr. Mustajab
+
 ## Project Overview
 This project is a modular web application that integrates large-dataset handling, moving window analysis, and dynamic data visualization into an interactive interface. The application processes the official Our World in Data (OWID) COVID-19 dataset using **Pandas**, generates advanced data visualizations using **Matplotlib**, and exposes them via a robust **Flask** web framework. 
 
